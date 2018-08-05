@@ -1,0 +1,163 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+<form action="addUser">
+  <h3>添加用户</h3>
+  <hr>
+  <div class="form-group">
+    <label for="username">用户名：</label>
+    <input type="text" id="username" class="form-control">
+    <div class="alert alert-danger error-box" id="usernameErrorMessageBox"></div>
+  </div>
+
+  <div class="form-group">
+    <label for="password">密码：</label>
+    <input type="password" id="password" class="form-control">
+    <div class="alert alert-danger error-box" id="passwordErrorMessageBox"></div>
+  </div>
+
+  <div class="form-group">
+    <label for="phoneNumber">手机：</label>
+    <input type="text" id="phoneNumber" class="form-control">
+    <div class="alert alert-danger error-box" id="phoneNumberErrorMessageBox"></div>
+  </div>
+
+  <div class="form-group">
+    <label for="email">邮箱：</label>
+    <input type="email" id="email" class="form-control">
+    <div class="alert alert-danger error-box" id="emailErrorMessageBox"></div>
+  </div>
+
+  <div class="form-group">
+    <label for="sex">性别：</label>
+    <input type="radio" id="man" name="sex" checked> 男
+    <input type="radio" id="woman" name="sex"> 女
+  </div>
+
+  <div class="form-group">
+    <label for="brithday">生日：</label>
+    <input type="date" id="brithday" class="form-control">
+  </div>
+
+  <div class="form-group">
+    <label for="avatar">头像：</label>
+    <input type="file" id="avatar" class="form-control">
+  </div>
+
+  <button class="btn btn-success">添加</button>
+</form>
+{% endblock %}
+
+{% block script %}
+  <script>
+    // Class name use later.
+    const baseBoxClassName = 'form-group';
+    const errorBoxClassName = baseBoxClassName + ' has-error';
+  
+    // Input elments.
+    const username = ge('username');
+    const password = ge('password');
+    const phoneNumber = ge('phoneNumber');
+    const email = ge('email');
+
+    // Error message for each input element.
+    const usernameErrorMessage = new rxjs.BehaviorSubject('');
+    const passwordErrorMessage = new rxjs.BehaviorSubject('');
+    const phoneNumberErrorMessage = new rxjs.BehaviorSubject('');
+    const emailErrorMessage = new rxjs.BehaviorSubject('');
+
+    // Error message box for each input element.
+    const ub = ge('usernameErrorMessageBox');
+    const pb = ge('passwordErrorMessageBox');
+    const pnb = ge('phoneNumberErrorMessageBox'); // Phone number error message box.
+    const eb = ge('emailErrorMessageBox');
+
+    observerError(usernameErrorMessage, username, usernameErrorMessageBox);
+    observerError(passwordErrorMessage, password, passwordErrorMessageBox);
+    observerError(phoneNumberErrorMessage, phoneNumber, phoneNumberErrorMessageBox);
+    observerError(emailErrorMessage, email, emailErrorMessageBox);
+
+    getObservableFromElementInputEvent(username)
+      .subscribe(value => {
+        let m = '';
+        if (value.length === 0) {
+          // Show Not Empty message.
+          m = '用户名不能为空';
+        } else if (value.length <= 3) {
+          // Show length must greater 3 message.
+          m = '用户名长度需大于三个字符';
+        }
+
+        // Close error message box.
+        return usernameErrorMessage.next(m);
+      });
+
+    getObservableFromElementInputEvent(password)
+      .subscribe(value => {
+        let m = '';
+        if (value.length === 0) {
+          m = '密码不能为空';
+        } else if (value.length < 8) {
+          m = '密码长度需大于8位';
+        } else if (value.length > 16) {
+          m = '密码长度需小于16位';
+        }
+
+        return passwordErrorMessage.next(m);
+      });
+
+    getObservableFromElementInputEvent(phoneNumber)
+      .subscribe(value => {
+        let m = '';
+        if (value.length === 0) {
+          m = '手机号码不能为空';
+        } else if (!/^1\d{10}$/.test(value)) {
+          m = '手机号码格式不正确';
+        }
+
+        return phoneNumberErrorMessage.next(m);
+      });
+
+    getObservableFromElementInputEvent(email)
+      .subscribe(value => {
+        let m = '';
+        if (value.length === 0) {
+          m = '邮箱不能为空';
+        } else if (!/^[\w]+@[\w]+\.[\w]+$/.test(value)) {
+          m = '邮箱格式不正确';
+        } else if (!/^[\w]+@[\w]+\.(com|net|cn)+$/.test(value)) {
+          m = '仅支持com、cn、net为后缀的邮箱名';
+        }
+
+        return emailErrorMessage.next(m);
+      });
+
+    // Tool finctions.
+
+    // Get element from name.
+    function ge(name) {
+      return document.getElementById(name);
+    }
+
+    function getObservableFromElementInputEvent(element) {
+      return rxjs.fromEvent(element, 'input')
+        .pipe(rxjs.operators.map(v => v.target.value))
+    }
+
+    function observerError(errorMessage, inputElement, showBox) {
+      errorMessage
+        .subscribe(message => {
+          if (message.length > 0) {
+            // Show error message.
+            inputElement.parentElement.className = errorBoxClassName;
+            showBox.innerText = message;
+            showBox.style.display = 'block';
+          } else {
+            // Hide error message.
+            inputElement.parentElement.className = baseBoxClassName;
+            showBox.style.display = 'none';
+          }
+        });
+    }
+  </script>
+{% endblock %}
