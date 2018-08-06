@@ -13,6 +13,31 @@ nav {
   top: 0;
   left: 0;
   width: 100%;
+  display: flex;
+
+}
+
+.acs {
+  flex-grow: 1;
+}
+
+nav .acs a {
+  color: white;
+  cursor: pointer;
+  text-decoration: none;
+  line-height: 56px;
+}
+
+.acs li {
+  list-style: none;
+  display: block;
+}
+
+.acs ul {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  flex-direction: row-reverse;
 }
 
 .side-bar {
@@ -51,4 +76,13 @@ hr {
 .my-table {
   width: 90%;
   margin: 20px auto;
+}
+
+.my-table td:last-child {
+  width: 10em;
+  text-align: center;
+}
+
+.my-table td:nth-last-child(2) {
+  width: 30em;
 }

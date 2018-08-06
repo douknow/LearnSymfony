@@ -76,9 +76,6 @@ class User
 
     /**
      * @ORM\Column(type="datetime")
-     * @Assert\NotBlank(
-     *     message="生日不能为空"
-     * )
      */
     private $birthday;
 
@@ -86,6 +83,11 @@ class User
      * @ORM\Column(type="string")
      */
     private $avatar;
+
+    /**
+     * @ORM\Column(type="text")
+     */
+    private $description;
 
     /**
      * User constructor.
@@ -96,8 +98,9 @@ class User
      * @param $sex
      * @param $birthday
      * @param $avatar
+     * @param $description
      */
-    public function __construct($username, $password, $phoneNumber, $email, $sex, $birthday, $avatar)
+    public function __construct($username, $password, $phoneNumber, $email, $sex, $birthday, $avatar, $description)
     {
         $this->username = $username;
         $this->password = $password;
@@ -106,8 +109,8 @@ class User
         $this->sex = $sex;
         $this->birthday = $birthday;
         $this->avatar = $avatar;
+        $this->description = $description;
     }
-
 
     /**
      * @return mixed
@@ -237,5 +240,34 @@ class User
         $this->avatar = $avatar;
     }
 
+    /**
+     * @return mixed
+     */
+    public function getDescription()
+    {
+        return $this->description;
+    }
+
+    /**
+     * @param mixed $description
+     */
+    public function setDescription($description)
+    {
+        $this->description = $description;
+    }
+
+    public function getJson() {
+        return array(
+            "id"=>$this->getId(),
+            "username"=>$this->getUsername(),
+            "password"=>$this->getPassword(),
+            "phoneNumber"=>$this->getPhoneNumber(),
+            "email"=>$this->getEmail(),
+            "sex"=>$this->getSex(),
+            "birthday"=>$this->getBirthday()->format('Y-m-d'),
+            "avatar"=>$this->getAvatar(),
+            "description"=>$this->getDescription()
+        );
+    }
 
 }

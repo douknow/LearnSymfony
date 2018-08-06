@@ -11,7 +11,9 @@
 
 {% block content %}
     <div class="actions">
+        {% if guser %}
         <a class="btn btn-primary" href="add">添加用户</a>
+        {% endif %}
     </div>
     <table class="table table-hover table-bordered my-table">
         <thead>
@@ -23,20 +25,76 @@
             <th>性别</th>
             <th>生日</th>
             <th>头像</th>
+            <th>简介</th>
+            {% if guser %}
+            <th>操作</th>
+            {% endif %}
         </tr>
         </thead>
         <tbody>
         {% for user in users %}
             <tr>
+                <td>{{ loop.index }}</td>
                 <td>{{ user.username }}</td>
-                <td>{{ user.password }}</td>
                 <td>{{ user.phoneNumber }}</td>
                 <td>{{ user.email }}</td>
                 <td>{{ user.sex == 0 ? "男" : "女" }}</td>
                 <td>{{ user.birthday|date("Y年m月d日") }}</td>
                 <td>{{ user.avatar }}</td>
+                <td>{{ user.description }}</td>
+                {% if guser %}
+                <td>
+                    <a class="btn btn-default" href="add?type=edit&id={{ user.id }}">修改</a>
+                    <button class="btn btn-danger" id="{{ user.id }}" data-toggle="modal" data-target="#deleteModal">删除</button>
+                </td>
+                {% endif %}
             </tr>
         {% endfor %}
         </tbody>
     </table>
+
+    <!-- Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">是否删除？</h4>
+                </div>
+                <div class="modal-body">
+                    删除后数据将无法恢复！
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" id="sureDelete">删除</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block script %}
+    <script>
+        let willDeleteId;
+
+        const deleteButtons = document.getElementsByTagName('table')[0].getElementsByClassName('btn btn-danger');
+        Array.from(deleteButtons).forEach((button) => {
+            button.addEventListener('click', (e) => {
+                willDeleteId = e.target.id;
+            }, false);
+        });
+
+        document.getElementById("sureDelete").addEventListener('click', (e) => {
+            let url = 'delete?id=' + willDeleteId;
+            window.location = url;
+        }, false);
+
+        const addUser = document.getElementById("addUser");
+        if (addUser) {
+            addUser.addEventListener('click', (e) => {
+                // Show Modal.
+                $('#login').modal('show');
+            }, false);
+        }
+    </script>
 {% endblock %}

@@ -1,163 +1,312 @@
 {% extends 'base.html.twig' %}
 
+{% block styles %}
+    <style>
+        textarea {
+            resize: none;
+        }
+
+        .avatar {
+            width: 200px;
+            height: 150px;
+            background: #E0E0E0;
+            border-radius: 10px;
+            cursor: pointer;
+            background-size: cover;
+            border: #E0E0E0 2px solid;
+        }
+
+        #avatar {
+            display: none;
+        }
+    </style>
+{% endblock %}
+
 {% block content %}
-<form action="submit" method="post">
-  <h3>添加用户</h3>
-  <hr>
-  <div class="form-group">
-    <label for="username">用户名：</label>
-    <input type="text" id="username" name="username" class="form-control">
-    <div class="alert alert-danger error-box" id="usernameErrorMessageBox"></div>
-  </div>
+    <form action="submit" method="post">
+        <h3 id="title">添加用户</h3>
+        <hr>
+        <div class="form-group">
+            <label for="username">用户名：</label>
+            <input type="text" id="username" name="username" class="form-control">
+            <div class="alert alert-danger error-box" id="usernameErrorMessageBox"></div>
+        </div>
 
-  <div class="form-group">
-    <label for="password">密码：</label>
-    <input type="password" id="password" name="password" class="form-control">
-    <div class="alert alert-danger error-box" id="passwordErrorMessageBox"></div>
-  </div>
+        <div class="form-group">
+            <label for="password">密码：</label>
+            <input type="password" id="password" name="password" class="form-control">
+            <div class="alert alert-danger error-box" id="passwordErrorMessageBox"></div>
+        </div>
 
-  <div class="form-group">
-    <label for="phoneNumber">手机：</label>
-    <input type="text" id="phoneNumber" name="phoneNumber" class="form-control">
-    <div class="alert alert-danger error-box" id="phoneNumberErrorMessageBox"></div>
-  </div>
+        <div class="form-group">
+            <label for="phoneNumber">手机：</label>
+            <input type="text" id="phoneNumber" name="phoneNumber" class="form-control">
+            <div class="alert alert-danger error-box" id="phoneNumberErrorMessageBox"></div>
+        </div>
 
-  <div class="form-group">
-    <label for="email">邮箱：</label>
-    <input type="email" id="email" name="email" class="form-control">
-    <div class="alert alert-danger error-box" id="emailErrorMessageBox"></div>
-  </div>
+        <div class="form-group">
+            <label for="email">邮箱：</label>
+            <input type="email" id="email" name="email" class="form-control">
+            <div class="alert alert-danger error-box" id="emailErrorMessageBox"></div>
+        </div>
 
-  <div class="form-group">
-    <label for="sex">性别：</label>
-    <input type="radio" id="man" name="sex" value="0" checked> 男
-    <input type="radio" id="woman" name="sex" value="1"> 女
-  </div>
+        <div class="form-group">
+            <label for="sex">性别：</label>
+            <input type="radio" id="man" name="sex" value="0" checked> 男
+            <input type="radio" id="woman" name="sex" value="1"> 女
+        </div>
 
-  <div class="form-group">
-    <label for="brithday">生日：</label>
-    <input type="date" id="brithday" name="birthday" class="form-control">
-  </div>
+        <div class="form-group">
+            <label for="brithday">生日：</label>
+            <input type="date" id="brithday" name="birthday" class="form-control">
+        </div>
 
-  <div class="form-group">
-    <label for="avatar">头像：</label>
-    <input type="file" id="avatar" name="avatar" class="form-control">
-  </div>
+        <div class="form-group">
+            <label for="avatar">头像：</label>
+            <div id="avatarDiv" class="avatar"></div>
+            <input type="file" name="avatar" id="avatar" hidden>
+        </div>
 
-  <button class="btn btn-success">添加</button>
-</form>
+        <div class="form-group">
+            <label for="description">描述：</label>
+            <textarea name="description" id="description" cols="30" rows="5" class="form-control"></textarea>
+        </div>
+
+        <button class="btn btn-success" id="submitButton" disabled>添加</button>
+        <a class="btn btn-default">取消</a>
+    </form>
 {% endblock %}
 
 {% block script %}
-  <script>
-    // Class name use later.
-    const baseBoxClassName = 'form-group';
-    const errorBoxClassName = baseBoxClassName + ' has-error';
-  
-    // Input elments.
-    const username = ge('username');
-    const password = ge('password');
-    const phoneNumber = ge('phoneNumber');
-    const email = ge('email');
+    <script>
+        // Class name use later.
+        const baseBoxClassName = 'form-group';
+        const errorBoxClassName = baseBoxClassName + ' has-error';
 
-    // Error message for each input element.
-    const usernameErrorMessage = new rxjs.BehaviorSubject('');
-    const passwordErrorMessage = new rxjs.BehaviorSubject('');
-    const phoneNumberErrorMessage = new rxjs.BehaviorSubject('');
-    const emailErrorMessage = new rxjs.BehaviorSubject('');
+        // Save status.
+        let allStatus = [false, false, false, false];
+        const validator = new rxjs.BehaviorSubject(allStatus);
 
-    // Error message box for each input element.
-    const ub = ge('usernameErrorMessageBox');
-    const pb = ge('passwordErrorMessageBox');
-    const pnb = ge('phoneNumberErrorMessageBox'); // Phone number error message box.
-    const eb = ge('emailErrorMessageBox');
+        // Input elements.
+        const username = ge('username');
+        const password = ge('password');
+        const phoneNumber = ge('phoneNumber');
+        const email = ge('email');
 
-    observerError(usernameErrorMessage, username, usernameErrorMessageBox);
-    observerError(passwordErrorMessage, password, passwordErrorMessageBox);
-    observerError(phoneNumberErrorMessage, phoneNumber, phoneNumberErrorMessageBox);
-    observerError(emailErrorMessage, email, emailErrorMessageBox);
+        // Error message for each input element.
+        const usernameErrorMessage = new rxjs.BehaviorSubject('');
+        const passwordErrorMessage = new rxjs.BehaviorSubject('');
+        const phoneNumberErrorMessage = new rxjs.BehaviorSubject('');
+        const emailErrorMessage = new rxjs.BehaviorSubject('');
 
-    getObservableFromElementInputEvent(username)
-      .subscribe(value => {
-        let m = '';
-        if (value.length === 0) {
-          // Show Not Empty message.
-          m = '用户名不能为空';
-        } else if (value.length <= 3) {
-          // Show length must greater 3 message.
-          m = '用户名长度需大于三个字符';
+        // Error message box for each input element.
+        const ub = ge('usernameErrorMessageBox');
+        const pb = ge('passwordErrorMessageBox');
+        const pnb = ge('phoneNumberErrorMessageBox'); // Phone number error message box.
+        const eb = ge('emailErrorMessageBox');
+
+        observerError(usernameErrorMessage, username, usernameErrorMessageBox);
+        observerError(passwordErrorMessage, password, passwordErrorMessageBox);
+        observerError(phoneNumberErrorMessage, phoneNumber, phoneNumberErrorMessageBox);
+        observerError(emailErrorMessage, email, emailErrorMessageBox);
+
+        // Watch submit button status.
+        validator
+            .subscribe(status => {
+                if (status.filter(v => v === true).length === 4) {
+                    // Validate pass.
+                    ge('submitButton').disabled = false;
+                } else {
+                    // Wrong.
+                    ge('submitButton').disabled = true;
+                }
+            });
+
+        getObservableFromElementInputEvent(username)
+            .subscribe(value => {
+                let m = '';
+                allStatus[0] = false;
+
+                if (value.length === 0) {
+                    // Show Not Empty message.
+                    m = '用户名不能为空';
+                } else if (value.length <= 3) {
+                    // Show length must greater 3 message.
+                    m = '用户名长度需大于三个字符';
+                } else {
+                    allStatus[0] = true;
+                }
+
+                validator.next(allStatus);
+                // Close error message box.
+                return usernameErrorMessage.next(m);
+            });
+
+        getObservableFromElementInputEvent(password)
+            .subscribe(value => {
+                let m = '';
+                allStatus[1] = false;
+
+                if (value.length === 0) {
+                    m = '密码不能为空';
+                } else if (value.length < 8) {
+                    m = '密码长度需大于8位';
+                } else if (value.length > 20) {
+                    m = '密码长度需小于20位';
+                } else {
+                    allStatus[1] = true;
+                }
+
+                validator.next(allStatus);
+                return passwordErrorMessage.next(m);
+            });
+
+        getObservableFromElementInputEvent(phoneNumber)
+            .subscribe(value => {
+                let m = '';
+                allStatus[2] = false;
+
+                if (value.length === 0) {
+                    m = '手机号码不能为空';
+                } else if (!/^1\d{10}$/.test(value)) {
+                    m = '手机号码格式不正确';
+                } else {
+                    allStatus[2] = true;
+                }
+
+                validator.next(allStatus);
+                return phoneNumberErrorMessage.next(m);
+            });
+
+        getObservableFromElementInputEvent(email)
+            .subscribe(value => {
+                let m = '';
+                allStatus[3] = false;
+
+                if (value.length === 0) {
+                    m = '邮箱不能为空';
+                } else if (!/^[\w]+@[\w]+\.[\w]+$/.test(value)) {
+                    m = '邮箱格式不正确';
+                } else if (!/^[\w]+@[\w]+\.(com|net|cn)+$/.test(value)) {
+                    m = '仅支持com、cn、net为后缀的邮箱名';
+                } else {
+                    allStatus[3] = true;
+                }
+
+                validator.next(allStatus);
+                return emailErrorMessage.next(m);
+            });
+
+        // Tool finctions.
+
+        // Get element from name.
+        function ge(name) {
+            return document.getElementById(name);
         }
 
-        // Close error message box.
-        return usernameErrorMessage.next(m);
-      });
-
-    getObservableFromElementInputEvent(password)
-      .subscribe(value => {
-        let m = '';
-        if (value.length === 0) {
-          m = '密码不能为空';
-        } else if (value.length < 8) {
-          m = '密码长度需大于8位';
-        } else if (value.length > 16) {
-          m = '密码长度需小于16位';
+        function getObservableFromElementInputEvent(element) {
+            return rxjs.fromEvent(element, 'input')
+                .pipe(rxjs.operators.map(v => v.target.value))
         }
 
-        return passwordErrorMessage.next(m);
-      });
-
-    getObservableFromElementInputEvent(phoneNumber)
-      .subscribe(value => {
-        let m = '';
-        if (value.length === 0) {
-          m = '手机号码不能为空';
-        } else if (!/^1\d{10}$/.test(value)) {
-          m = '手机号码格式不正确';
+        function observerError(errorMessage, inputElement, showBox) {
+            errorMessage
+                .subscribe(message => {
+                    if (message.length > 0) {
+                        // Show error message.
+                        inputElement.parentElement.className = errorBoxClassName;
+                        showBox.innerText = message;
+                        showBox.style.display = 'block';
+                    } else {
+                        // Hide error message.
+                        inputElement.parentElement.className = baseBoxClassName;
+                        showBox.style.display = 'none';
+                    }
+                });
         }
 
-        return phoneNumberErrorMessage.next(m);
-      });
+        // About upload.
+        let uploadedUrl = '';
+        const chooseBox = ge('avatarDiv');
+        ge('avatarDiv').addEventListener('click', e => {
+            $('#avatar').click();
+        }, false);
 
-    getObservableFromElementInputEvent(email)
-      .subscribe(value => {
-        let m = '';
-        if (value.length === 0) {
-          m = '邮箱不能为空';
-        } else if (!/^[\w]+@[\w]+\.[\w]+$/.test(value)) {
-          m = '邮箱格式不正确';
-        } else if (!/^[\w]+@[\w]+\.(com|net|cn)+$/.test(value)) {
-          m = '仅支持com、cn、net为后缀的邮箱名';
+        ge('avatar').addEventListener('change', e => {
+            let formData = new FormData();
+            formData.append('avatar', ge('avatar').files[0]);
+            axios.post('/upload', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            }).then(res => {
+                chooseBox.style.backgroundImage = `url('${res.data.url}')`;
+                uploadedUrl = res.data.url;
+            }).catch(err => console.log(err));
+        }, false);
+
+        // Initial form.
+        let data = {};
+        data = window.location.search.slice(1).split('&').reduce((all, now) => {
+            let key = now.split("=")[0];
+            let v = now.split("=")[1];
+            all[key] = v;
+            return all;
+        }, {});
+
+        let editUser = {};
+
+        if (data.type === 'edit') {
+            // Get user info.
+            axios.get('/user/' + data.id).then(res => {
+                let u = res.data.data;
+                editUser.id = u.id;
+                username.value = u.username;
+                password.value = u.password;
+                phoneNumber.value = u.phoneNumber;
+                email.value = u.email;
+                ge('brithday').value = u.birthday;
+                u.sex === 0 ? ge('man').checked = true : ge('woman').checked = true;
+                chooseBox.style.backgroundImage = `url('/upload/${u.avatar}')`;
+                ge('description').innerText = u.description;
+
+                ge('title').innerText = '修改用户';
+                ge('submitButton').innerText = '修改';
+
+                allStatus = [true, true, true, true];
+                validator.next(allStatus);
+            });
         }
 
-        return emailErrorMessage.next(m);
-      });
+        ge('submitButton').addEventListener('click', e => {
+            e.preventDefault();
 
-    // Tool finctions.
+            let formData = new FormData();
+            formData.set('username', username.value);
+            formData.set('password', password.value);
+            formData.set('phoneNumber', phoneNumber.value);
+            formData.set('email', email.value);
+            formData.set('sex', ge('man').checked ? 0 : 1);
+            formData.set('birthday', ge('brithday').value);
+            formData.set('avatar', ge('avatar').value.split('\\').pop());
+            formData.set('description', ge('description').value);
 
-    // Get element from name.
-    function ge(name) {
-      return document.getElementById(name);
-    }
+            if (data.type === 'edit') {
+                // Update.
+                axios.post('/user/' + editUser.id, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                }).then(res => {
+                    console.log(res);
+                });
+            } else {
+                // Add.
+                axios.post('/user', formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                }).then(res => {
+                    console.log(res);
+                });
+            }
+        }, false);
 
-    function getObservableFromElementInputEvent(element) {
-      return rxjs.fromEvent(element, 'input')
-        .pipe(rxjs.operators.map(v => v.target.value))
-    }
-
-    function observerError(errorMessage, inputElement, showBox) {
-      errorMessage
-        .subscribe(message => {
-          if (message.length > 0) {
-            // Show error message.
-            inputElement.parentElement.className = errorBoxClassName;
-            showBox.innerText = message;
-            showBox.style.display = 'block';
-          } else {
-            // Hide error message.
-            inputElement.parentElement.className = baseBoxClassName;
-            showBox.style.display = 'none';
-          }
-        });
-    }
-  </script>
+    </script>
 {% endblock %}
