@@ -1,0 +1,42 @@
+{% extends "base.html.twig" %}
+
+{% block styles %}
+    <style>
+        .actions {
+            width: 90%;
+            margin: 20px auto;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="actions">
+        <a class="btn btn-primary" href="add">添加用户</a>
+    </div>
+    <table class="table table-hover table-bordered my-table">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>用户名</th>
+            <th>手机号码</th>
+            <th>邮箱</th>
+            <th>性别</th>
+            <th>生日</th>
+            <th>头像</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for user in users %}
+            <tr>
+                <td>{{ user.username }}</td>
+                <td>{{ user.password }}</td>
+                <td>{{ user.phoneNumber }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.sex == 0 ? "男" : "女" }}</td>
+                <td>{{ user.birthday|date("Y年m月d日") }}</td>
+                <td>{{ user.avatar }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

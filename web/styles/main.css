@@ -47,3 +47,8 @@ hr {
 .error-box {
   display: none;
 }
+
+.my-table {
+  width: 90%;
+  margin: 20px auto;
+}

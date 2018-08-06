@@ -1,0 +1,18 @@
+{% extends "base.html.twig" %}
+
+{% block styles %}
+    <style>
+        .messages {
+            width: 60%;
+            margin: 2em auto;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="messages">
+        <div class="alert alert-danger">
+            {{ messages|raw }}
+        </div>
+    </div>
+{% endblock %}
