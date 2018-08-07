@@ -2,9 +2,42 @@
 
 {% block styles %}
     <style>
-        .actions {
-            width: 90%;
-            margin: 20px auto;
+        .pages {
+            margin: auto;
+            text-align: center;
+        }
+
+        .pages ul {
+            margin: auto;
+        }
+
+        .avatar-div {
+            height: 30px;
+            width: 30px;
+            border: 1px #AAAAAA solid;
+            background-size: cover;
+            border-radius: 50%;
+            padding: 0;
+            margin-top: 2px;
+            cursor: pointer;
+        }
+
+        .avatar-td {
+            text-align: center;
+            width: 46px;
+        }
+
+        .show-big-img {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        .my-modal-dialog {
+            width: 70% !important;
+        }
+
+        td.description {
+            width: 30em;
         }
     </style>
 {% endblock %}
@@ -40,8 +73,8 @@
                 <td>{{ user.email }}</td>
                 <td>{{ user.sex == 0 ? "男" : "女" }}</td>
                 <td>{{ user.birthday|date("Y年m月d日") }}</td>
-                <td>{{ user.avatar }}</td>
-                <td>{{ user.description }}</td>
+                <td class="avatar-td"><div class="avatar-div" id="avatarBox" style="background-image: url('{{ asset('upload/' ~ user.avatar) }}')"></div></td>
+                <td class="description">{{ user.description }}</td>
                 {% if guser %}
                 <td>
                     <a class="btn btn-default" href="add?type=edit&id={{ user.id }}">修改</a>
@@ -52,6 +85,24 @@
         {% endfor %}
         </tbody>
     </table>
+
+    <div class="pages" aria-label="Page navigation">
+        <ul class="pagination">
+            <li>
+                <a href="/user/all" aria-label="Previous">
+                    <span aria-hidden="true">首页</span>
+                </a>
+            </li>
+            <li class="{% if nowPage == 1 %}disabled{% endif %}"><a href="{% if nowPage != 1 %}/user/all?page={{ nowPage - 1 }}{% else %}#{% endif %}">上一页</a></li>
+            <li class="active"><a>{{ nowPage }}</a></li>
+            <li class="{% if nowPage == allPage %}disabled{% endif %}"><a href="{% if nowPage != allPage %}/user/all?page={{ nowPage + 1 }}{% else %}#{% endif %}">下一页</a></li>
+            <li>
+                <a href="/user/all?page={{ allPage }}" aria-label="Next">
+                    <span aria-hidden="true">末页</span>
+                </a>
+            </li>
+        </ul>
+    </div>
 
     <!-- Modal -->
     <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
@@ -71,6 +122,14 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="bigImage" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog my-modal-dialog" role="document">
+            <div class="modal-content">
+                <img class="show-big-img" id="bbbImage" src="/upload/black-and-white-facing-away-female-106567.jpg" alt="">
+            </div>
+        </div>
+    </div>
 {% endblock %}
 
 {% block script %}
@@ -85,8 +144,9 @@
         });
 
         document.getElementById("sureDelete").addEventListener('click', (e) => {
-            let url = 'delete?id=' + willDeleteId;
-            window.location = url;
+            axios.delete('/user/' + willDeleteId)
+                .then(res => window.location.reload())
+                .catch(err => console.log(err));
         }, false);
 
         const addUser = document.getElementById("addUser");
@@ -96,5 +156,14 @@
                 $('#login').modal('show');
             }, false);
         }
+
+        Array.from(document.getElementsByClassName('avatar-div')).forEach(v => {
+            v.addEventListener('click', e => {
+                const u = e.target.style.backgroundImage.split('"')[1];
+                console.log(document.getElementById('bbbImage'));
+                document.getElementById('bbbImage').src = u;
+                $('#bigImage').modal('toggle');
+            }, false);
+        })
     </script>
 {% endblock %}

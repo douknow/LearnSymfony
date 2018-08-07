@@ -78,11 +78,12 @@ hr {
   margin: 20px auto;
 }
 
-.my-table td:last-child {
+.td.actions {
   width: 10em;
   text-align: center;
 }
 
-.my-table td:nth-last-child(2) {
-  width: 30em;
+.actions {
+  width: 90%;
+  margin: 20px auto;
 }

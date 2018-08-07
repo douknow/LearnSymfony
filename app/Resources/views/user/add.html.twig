@@ -78,235 +78,243 @@
 {% endblock %}
 
 {% block script %}
-    <script>
-        // Class name use later.
-        const baseBoxClassName = 'form-group';
-        const errorBoxClassName = baseBoxClassName + ' has-error';
+<script>
+    // Class name use later.
+    const baseBoxClassName = 'form-group';
+    const errorBoxClassName = baseBoxClassName + ' has-error';
 
-        // Save status.
-        let allStatus = [false, false, false, false];
-        const validator = new rxjs.BehaviorSubject(allStatus);
+    // Save status.
+    let allStatus = [false, false, false, false];
+    const validator = new rxjs.BehaviorSubject(allStatus);
 
-        // Input elements.
-        const username = ge('username');
-        const password = ge('password');
-        const phoneNumber = ge('phoneNumber');
-        const email = ge('email');
+    // Input elements.
+    const username = ge('username');
+    const password = ge('password');
+    const phoneNumber = ge('phoneNumber');
+    const email = ge('email');
 
-        // Error message for each input element.
-        const usernameErrorMessage = new rxjs.BehaviorSubject('');
-        const passwordErrorMessage = new rxjs.BehaviorSubject('');
-        const phoneNumberErrorMessage = new rxjs.BehaviorSubject('');
-        const emailErrorMessage = new rxjs.BehaviorSubject('');
+    // Error message for each input element.
+    const usernameErrorMessage = new rxjs.BehaviorSubject('');
+    const passwordErrorMessage = new rxjs.BehaviorSubject('');
+    const phoneNumberErrorMessage = new rxjs.BehaviorSubject('');
+    const emailErrorMessage = new rxjs.BehaviorSubject('');
 
-        // Error message box for each input element.
-        const ub = ge('usernameErrorMessageBox');
-        const pb = ge('passwordErrorMessageBox');
-        const pnb = ge('phoneNumberErrorMessageBox'); // Phone number error message box.
-        const eb = ge('emailErrorMessageBox');
+    // Error message box for each input element.
+    const ub = ge('usernameErrorMessageBox');
+    const pb = ge('passwordErrorMessageBox');
+    const pnb = ge('phoneNumberErrorMessageBox'); // Phone number error message box.
+    const eb = ge('emailErrorMessageBox');
 
-        observerError(usernameErrorMessage, username, usernameErrorMessageBox);
-        observerError(passwordErrorMessage, password, passwordErrorMessageBox);
-        observerError(phoneNumberErrorMessage, phoneNumber, phoneNumberErrorMessageBox);
-        observerError(emailErrorMessage, email, emailErrorMessageBox);
+    observerError(usernameErrorMessage, username, usernameErrorMessageBox);
+    observerError(passwordErrorMessage, password, passwordErrorMessageBox);
+    observerError(phoneNumberErrorMessage, phoneNumber, phoneNumberErrorMessageBox);
+    observerError(emailErrorMessage, email, emailErrorMessageBox);
 
-        // Watch submit button status.
-        validator
-            .subscribe(status => {
-                if (status.filter(v => v === true).length === 4) {
-                    // Validate pass.
-                    ge('submitButton').disabled = false;
+    // Watch submit button status.
+    validator
+        .subscribe(status => {
+            if (status.filter(v => v === true).length === 4) {
+                // Validate pass.
+                ge('submitButton').disabled = false;
+            } else {
+                // Wrong.
+                ge('submitButton').disabled = true;
+            }
+        });
+
+    getObservableFromElementInputEvent(username)
+        .subscribe(value => {
+            let m = '';
+            allStatus[0] = false;
+
+            if (value.length === 0) {
+                // Show Not Empty message.
+                m = '用户名不能为空';
+            } else if (value.length <= 3) {
+                // Show length must greater 3 message.
+                m = '用户名长度需大于三个字符';
+            } else {
+                allStatus[0] = true;
+            }
+
+            validator.next(allStatus);
+            // Close error message box.
+            return usernameErrorMessage.next(m);
+        });
+
+    getObservableFromElementInputEvent(password)
+        .subscribe(value => {
+            let m = '';
+            allStatus[1] = false;
+
+            if (value.length === 0) {
+                m = '密码不能为空';
+            } else if (value.length < 8) {
+                m = '密码长度需大于8位';
+            } else if (value.length > 20) {
+                m = '密码长度需小于20位';
+            } else {
+                allStatus[1] = true;
+            }
+
+            validator.next(allStatus);
+            return passwordErrorMessage.next(m);
+        });
+
+    getObservableFromElementInputEvent(phoneNumber)
+        .subscribe(value => {
+            let m = '';
+            allStatus[2] = false;
+
+            if (value.length === 0) {
+                m = '手机号码不能为空';
+            } else if (!/^1\d{10}$/.test(value)) {
+                m = '手机号码格式不正确';
+            } else {
+                allStatus[2] = true;
+            }
+
+            validator.next(allStatus);
+            return phoneNumberErrorMessage.next(m);
+        });
+
+    getObservableFromElementInputEvent(email)
+        .subscribe(value => {
+            let m = '';
+            allStatus[3] = false;
+
+            if (value.length === 0) {
+                m = '邮箱不能为空';
+            } else if (!/^[\w]+@[\w]+\.[\w]+$/.test(value)) {
+                m = '邮箱格式不正确';
+            } else if (!/^[\w]+@[\w]+\.(com|net|cn)+$/.test(value)) {
+                m = '仅支持com、cn、net为后缀的邮箱名';
+            } else {
+                allStatus[3] = true;
+            }
+
+            validator.next(allStatus);
+            return emailErrorMessage.next(m);
+        });
+
+    // Tool finctions.
+
+    // Get element from name.
+    function ge(name) {
+        return document.getElementById(name);
+    }
+
+    function getObservableFromElementInputEvent(element) {
+        return obs = rxjs.fromEvent(element, 'input')
+            .pipe(rxjs.operators.map(v => v.target.value));
+    }
+
+    function observerError(errorMessage, inputElement, showBox) {
+        errorMessage
+            .subscribe(message => {
+                if (message.length > 0) {
+                    // Show error message.
+                    inputElement.parentElement.className = errorBoxClassName;
+                    showBox.innerText = message;
+                    showBox.style.display = 'block';
                 } else {
-                    // Wrong.
-                    ge('submitButton').disabled = true;
+                    // Hide error message.
+                    inputElement.parentElement.className = baseBoxClassName;
+                    showBox.style.display = 'none';
                 }
             });
+    }
 
-        getObservableFromElementInputEvent(username)
-            .subscribe(value => {
-                let m = '';
-                allStatus[0] = false;
+    // About upload.
+    let uploadedUrl = '';
+    const chooseBox = ge('avatarDiv');
+    ge('avatarDiv').addEventListener('click', e => {
+        $('#avatar').click();
+    }, false);
 
-                if (value.length === 0) {
-                    // Show Not Empty message.
-                    m = '用户名不能为空';
-                } else if (value.length <= 3) {
-                    // Show length must greater 3 message.
-                    m = '用户名长度需大于三个字符';
-                } else {
-                    allStatus[0] = true;
-                }
+    ge('avatar').addEventListener('change', e => {
+        let formData = new FormData();
+        formData.append('avatar', ge('avatar').files[0]);
+        axios.post('/upload', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        }).then(res => {
+            chooseBox.style.backgroundImage = `url('${res.data.url}')`;
+            uploadedUrl = res.data.url;
+        }).catch(err => console.log(err));
+    }, false);
 
-                validator.next(allStatus);
-                // Close error message box.
-                return usernameErrorMessage.next(m);
-            });
+    // Initial form.
+    let data = {};
+    data = window.location.search.slice(1).split('&').reduce((all, now) => {
+        let key = now.split("=")[0];
+        let v = now.split("=")[1];
+        all[key] = v;
+        return all;
+    }, {});
 
-        getObservableFromElementInputEvent(password)
-            .subscribe(value => {
-                let m = '';
-                allStatus[1] = false;
+    let editUser = {};
 
-                if (value.length === 0) {
-                    m = '密码不能为空';
-                } else if (value.length < 8) {
-                    m = '密码长度需大于8位';
-                } else if (value.length > 20) {
-                    m = '密码长度需小于20位';
-                } else {
-                    allStatus[1] = true;
-                }
+    if (data.type === 'edit') {
+        password.parentElement.style.display = 'none';
+        // Get user info.
+        axios.get('/user/' + data.id).then(res => {
+            let u = res.data.data;
+            editUser.id = u.id;
+            username.value = u.username;
+            phoneNumber.value = u.phoneNumber;
+            email.value = u.email;
+            ge('brithday').value = u.birthday;
+            u.sex === 0 ? ge('man').checked = true : ge('woman').checked = true;
+            chooseBox.style.backgroundImage = `url('/upload/${u.avatar}')`;
+            ge('description').innerText = u.description;
 
-                validator.next(allStatus);
-                return passwordErrorMessage.next(m);
-            });
+            ge('title').innerText = '修改用户';
+            ge('submitButton').innerText = '修改';
 
-        getObservableFromElementInputEvent(phoneNumber)
-            .subscribe(value => {
-                let m = '';
-                allStatus[2] = false;
+            allStatus = [true, true, true, true];
+            validator.next(allStatus);
+        });
+    }
 
-                if (value.length === 0) {
-                    m = '手机号码不能为空';
-                } else if (!/^1\d{10}$/.test(value)) {
-                    m = '手机号码格式不正确';
-                } else {
-                    allStatus[2] = true;
-                }
-
-                validator.next(allStatus);
-                return phoneNumberErrorMessage.next(m);
-            });
-
-        getObservableFromElementInputEvent(email)
-            .subscribe(value => {
-                let m = '';
-                allStatus[3] = false;
-
-                if (value.length === 0) {
-                    m = '邮箱不能为空';
-                } else if (!/^[\w]+@[\w]+\.[\w]+$/.test(value)) {
-                    m = '邮箱格式不正确';
-                } else if (!/^[\w]+@[\w]+\.(com|net|cn)+$/.test(value)) {
-                    m = '仅支持com、cn、net为后缀的邮箱名';
-                } else {
-                    allStatus[3] = true;
-                }
-
-                validator.next(allStatus);
-                return emailErrorMessage.next(m);
-            });
-
-        // Tool finctions.
-
-        // Get element from name.
-        function ge(name) {
-            return document.getElementById(name);
-        }
-
-        function getObservableFromElementInputEvent(element) {
-            return rxjs.fromEvent(element, 'input')
-                .pipe(rxjs.operators.map(v => v.target.value))
-        }
-
-        function observerError(errorMessage, inputElement, showBox) {
-            errorMessage
-                .subscribe(message => {
-                    if (message.length > 0) {
-                        // Show error message.
-                        inputElement.parentElement.className = errorBoxClassName;
-                        showBox.innerText = message;
-                        showBox.style.display = 'block';
-                    } else {
-                        // Hide error message.
-                        inputElement.parentElement.className = baseBoxClassName;
-                        showBox.style.display = 'none';
-                    }
-                });
-        }
-
-        // About upload.
-        let uploadedUrl = '';
-        const chooseBox = ge('avatarDiv');
-        ge('avatarDiv').addEventListener('click', e => {
-            $('#avatar').click();
-        }, false);
-
-        ge('avatar').addEventListener('change', e => {
-            let formData = new FormData();
-            formData.append('avatar', ge('avatar').files[0]);
-            axios.post('/upload', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            }).then(res => {
-                chooseBox.style.backgroundImage = `url('${res.data.url}')`;
-                uploadedUrl = res.data.url;
-            }).catch(err => console.log(err));
-        }, false);
-
-        // Initial form.
-        let data = {};
-        data = window.location.search.slice(1).split('&').reduce((all, now) => {
-            let key = now.split("=")[0];
-            let v = now.split("=")[1];
-            all[key] = v;
-            return all;
-        }, {});
-
-        let editUser = {};
+    ge('submitButton').addEventListener('click', e => {
+        e.preventDefault();
+        let formData = new FormData();
+        formData.set('username', username.value);
+        formData.set('password', password.value);
+        formData.set('phoneNumber', phoneNumber.value);
+        formData.set('email', email.value);
+        formData.set('sex', ge('man').checked ? 0 : 1);
+        formData.set('birthday', ge('brithday').value);
+        formData.set('avatar', ge('avatar').value.split('\\').pop());
+        formData.set('description', ge('description').value);
 
         if (data.type === 'edit') {
-            // Get user info.
-            axios.get('/user/' + data.id).then(res => {
-                let u = res.data.data;
-                editUser.id = u.id;
-                username.value = u.username;
-                password.value = u.password;
-                phoneNumber.value = u.phoneNumber;
-                email.value = u.email;
-                ge('brithday').value = u.birthday;
-                u.sex === 0 ? ge('man').checked = true : ge('woman').checked = true;
-                chooseBox.style.backgroundImage = `url('/upload/${u.avatar}')`;
-                ge('description').innerText = u.description;
-
-                ge('title').innerText = '修改用户';
-                ge('submitButton').innerText = '修改';
-
-                allStatus = [true, true, true, true];
-                validator.next(allStatus);
+            // Update.
+            axios.patch('/user/' + editUser.id, formData, {
+                data: {
+                    username: username.value,
+                    password: password.value,
+                    phoneNumber: phoneNumber.value,
+                    email: email.value,
+                    sex: ge('man').checked ? 0 : 1,
+                    birthday: ge('brithday').value,
+                    avatar: ge('avatar').value.split('\\').pop(),
+                    description: ge('description').value
+                },
+                headers: {'Content-Type': 'multipart/form-data'}
+            }).then(() => {
+                self.location = '/user/all';
+            });
+        } else {
+            // Add.
+            axios.post('/user', formData, {
+                headers: {'Content-Type': 'multipart/form-data'}
+            }).then(() => {
+                self.location = '/user/all';
             });
         }
-
-        ge('submitButton').addEventListener('click', e => {
-            e.preventDefault();
-
-            let formData = new FormData();
-            formData.set('username', username.value);
-            formData.set('password', password.value);
-            formData.set('phoneNumber', phoneNumber.value);
-            formData.set('email', email.value);
-            formData.set('sex', ge('man').checked ? 0 : 1);
-            formData.set('birthday', ge('brithday').value);
-            formData.set('avatar', ge('avatar').value.split('\\').pop());
-            formData.set('description', ge('description').value);
-
-            if (data.type === 'edit') {
-                // Update.
-                axios.post('/user/' + editUser.id, formData, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                }).then(res => {
-                    console.log(res);
-                });
-            } else {
-                // Add.
-                axios.post('/user', formData, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                }).then(res => {
-                    console.log(res);
-                });
-            }
-        }, false);
-
-    </script>
+    }, false);
+</script>
 {% endblock %}

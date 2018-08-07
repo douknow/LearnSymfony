@@ -1,0 +1,175 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+    <div class="actions">
+        <button class="btn btn-primary" id="addProject">添加项目</button>
+    </div>
+
+    <table class="table table-hover table-bordered my-table">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>项目名</th>
+            <th>项目状态</th>
+            <th>开始时间</th>
+            <th>结束时间</th>
+            <th>负责人</th>
+            <th>操作</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        {% for d in data %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ d[0].name }}</td>
+                <td>{% if d[0].status == 1 %}新建{% elseif d[0].status == 2 %}进行中{% elseif d[0].status == 3 %}暂停{% elseif d[0].status == 4 %}已完成{% endif %}</td>
+                <td>{{ d[0].startDate|date('Y-m-d') }}</td>
+                <td>{{ d[0].endDate ? d[0].endDate |date('Y-m-d') : '' }}</td>
+                <td>{{ d.username }}</td>
+                <td>
+                    <button class="btn btn-default" id="updateProject" onclick="updateProject({{ loop.index }}, {{ d[0].id }})">修改</button>
+                    <button class="btn btn-danger" id="deleteProject" onclick="deleteProject({{ d[0].id }});">删除
+                    </button>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Modal -->
+    <div class="modal fade" id="addProjectModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">添加项目</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="name">项目名：</label>
+                        <input type="text" class="form-control" id="name">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success" id="addSubmit">添加</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {#Change project modal form.#}
+    <div class="modal fade" id="updateProjectModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">编辑项目</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="projectName">项目名：</label>
+                        <input type="text" class="form-control" id="projectName">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>项目状态：</label>
+                        <select id="updateProjectStatus" class="form-control">
+                            <option value="1">新建</option>
+                            <option value="2">进行中</option>
+                            <option value="3">暂停</option>
+                            <option value="4">已完成</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success" id="updateProjectSubmit">修改</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">是否删除？</h4>
+                </div>
+                <div class="modal-body">
+                    删除后数据将无法恢复！
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" id="deleteSubmit">删除</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block script %}
+    <script>
+        const allData = [
+        {% for d in data %}
+            {
+                id: '{{ d[0].id }}',
+                name: '{{ d[0].name }}',
+                status: '{{ d[0].status }}'
+            }
+        {% endfor %}
+        ];
+
+        $('#addProject').click(e => {
+            $('#addProjectModal').modal('show');
+        });
+
+        $('#addSubmit').click(() => {
+            axios.post('/project', {
+                name: $('#name').val()
+            }).then(res => window.location.reload());
+        });
+
+        let willDeleteId;
+        const deleteProject = (id) => {
+            willDeleteId = id;
+            $('#deleteModal').modal('show');
+        };
+
+        $('#deleteSubmit').click(() => {
+            axios.delete('/project/' + willDeleteId)
+                .then(res => window.location.reload());
+        });
+
+        let willUpdateId;
+        const updateProject = (id, deleteId) => {
+            willUpdateId = deleteId;
+            $('#updateProjectModal').modal('show');
+            let data = allData[id - 1];
+            $('#projectName').val(getPlainText(data.name));
+            $('#updateProjectStatus').val(data.status);
+        };
+
+        $('#updateProjectSubmit').click(() => {
+            const data = {
+                name: $('#projectName').val(),
+                status: $('#updateProjectStatus').val()
+            };
+
+            axios.put('/project/' + willUpdateId, data)
+                .then(res => window.location.reload());
+        });
+
+        function getPlainText(str) {
+            const parser = new DOMParser();
+            const dom = parser.parseFromString(str, 'text/html');
+            return dom.body.textContent;
+        }
+    </script>
+{% endblock %}
