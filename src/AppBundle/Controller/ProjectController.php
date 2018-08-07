@@ -81,7 +81,7 @@ class ProjectController extends Controller
      */
     public function deleteAction($id, Request $request)
     {
-        $this->authUserEqualProject($id, $request);
+        $p = $this->authUserEqualProject($id, $request);
 
         $em = $this->getDoctrine()->getManager();
         $em->remove($p);
