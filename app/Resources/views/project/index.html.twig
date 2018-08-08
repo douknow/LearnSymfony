@@ -254,6 +254,6 @@
           window.location.href = link;
         });
 
-        $('#selectCategory').val(window.location.href.split('?')[1].split('=')[1])
+        if (window.location.href.split('?').length > 1) $('#selectCategory').val(window.location.href.split('?')[1].split('=')[1])
     </script>
 {% endblock %}

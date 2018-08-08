@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css"
-          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ asset('styles/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('styles/main.css') }}">
     {% block styles %}
     {% endblock %}
@@ -36,6 +35,11 @@
 
         .acs ul li {
             margin: 0 1em;
+        }
+
+        .acs ul li a {
+          line-height: 56px;
+          display: inline-block;
         }
 
         .navAvatar {
@@ -132,12 +136,9 @@
     </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/rxjs/6.2.2/rxjs.umd.js"></script>
-<script src="https://code.jquery.com/jquery-3.3.1.min.js"
-        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
-<script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"
-        integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
-        crossorigin="anonymous"></script>
+<script src="{{ asset('scripts/rxjs.js') }}"></script>
+<script src="{{ asset('scripts/jquery.min.js') }}"></script>
+<script src="{{ asset('scripts/bootstrap.min.js') }}"></script>
 <script src="{{ asset('scripts/axios.js') }}"></script>
 
 <script>
