@@ -76,9 +76,11 @@
                 <td class="avatar-td"><div class="avatar-div" id="avatarBox" style="background-image: url('{{ asset('upload/' ~ user.avatar) }}')"></div></td>
                 <td class="description">{{ user.description }}</td>
                 {% if guser %}
-                <td>
+                <td class="td-action">
                     <a class="btn btn-default" href="add?type=edit&id={{ user.id }}">修改</a>
+                    {% if guser and guser.id != user.id %}
                     <button class="btn btn-danger" id="{{ user.id }}" data-toggle="modal" data-target="#deleteModal">删除</button>
+                    {% endif %}
                 </td>
                 {% endif %}
             </tr>
@@ -160,7 +162,6 @@
         Array.from(document.getElementsByClassName('avatar-div')).forEach(v => {
             v.addEventListener('click', e => {
                 const u = e.target.style.backgroundImage.split('"')[1];
-                console.log(document.getElementById('bbbImage'));
                 document.getElementById('bbbImage').src = u;
                 $('#bigImage').modal('toggle');
             }, false);

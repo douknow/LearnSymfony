@@ -6,6 +6,7 @@ use AppBundle\Entity\Project;
 use AppBundle\Entity\User;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -33,11 +34,29 @@ class ProjectController extends Controller
                 $page = $n;
             }
         }
-        $query = $em
+
+        $queryString = '';
+        if (key_exists('category', $_GET)) {
+          $queryString = 'select p, u.username from AppBundle:Project p join AppBundle:User u where p.managerUser = :id and p.managerUser = u.id and p.status = :category order by p.status asc';
+
+          $query = $em
             ->createQuery(
-                'select p, u.username from AppBundle:Project p join AppBundle:User u where p.managerUser = :id and p.managerUser = u.id'
+                $queryString
             )
-            ->setParameter('id', $u->getId())->setFirstResult(($page - 1) * 10)->setMaxResults(10);
+            ->setParameters(array('id'=>$u->getId(), 'category'=>$_GET['category']))
+            ->setFirstResult(($page - 1) * 10)
+            ->setMaxResults(10);
+        } else {
+          $queryString = 'select p, u.username from AppBundle:Project p join AppBundle:User u where p.managerUser = :id and p.managerUser = u.id order by p.status asc';
+
+          $query = $em
+            ->createQuery(
+                $queryString
+            )
+            ->setParameter('id', $u->getId())
+            ->setFirstResult(($page - 1) * 10)
+            ->setMaxResults(10);
+        }
 
         $projects = $query->getResult();
         return $this->render("project/index.html.twig", array(
@@ -52,6 +71,10 @@ class ProjectController extends Controller
     {
         $u = $this->auth($request);
         $data = json_decode(file_get_contents('php://input'), true);
+
+        // Ensure project name unique.
+        if (!$this->isUniqueProject($data['name'])) return;
+
         $project = new Project();
         $project->setName($data['name']);
         $project->setStartDate(new \DateTime());
@@ -64,6 +87,23 @@ class ProjectController extends Controller
         $em->flush();
 
         return $this->json($project->getJson());
+    }
+    
+    private function isUniqueProject($name, $update = null) {
+      $p = $this->getDoctrine()->getRepository(Project::class)->findOneBy(array('name'=>$name));
+      if ($update == null) {
+        if ($p) {
+          // Send parameter error.
+          (new Response('Already exists project name.', Response::HTTP_BAD_REQUEST ))->send();
+          return false;
+        }
+      } else {
+        if ($p && $p->getId() != $update->getId()) {
+          (new Response('Already exists project name.', Response::HTTP_BAD_REQUEST ))->send();
+          return false;
+        }
+      }
+      return true;
     }
 
     private function auth(Request $request)
@@ -95,6 +135,9 @@ class ProjectController extends Controller
     public function updateAction($id, Request $request) {
         $u = $this->auth($request);
         $project = $this->authUserEqualProject($id, $request);
+        $data = json_decode(file_get_contents('php://input'), true);
+
+        if (!$this->isUniqueProject($data['name'], $project)) return;
 
         $data = json_decode(file_get_contents('php://input'), true);
         $project->setName($data['name']);

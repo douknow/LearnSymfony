@@ -5,6 +5,7 @@ namespace AppBundle\Controller;
 use AppBundle\Entity\User;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -44,20 +45,10 @@ class UserController extends Controller
             $page == $allPage;
         }
 
-        if ($u) {
-            // Has login
-            $query = $em->createQuery(
-                'SELECT u
-            FROM AppBundle:User u
-            WHERE u.id <> :id'
-            )->setParameter('id', $u->getId())->setFirstResult(($page - 1) * 10)->setMaxResults(10);
-        } else {
-            // Not login
-            $query = $em->createQuery(
-                'SELECT u
-            FROM AppBundle:User u'
-            );
-        }
+        $query = $em->createQuery(
+            'SELECT u
+        FROM AppBundle:User u'
+        )->setFirstResult(($page - 1) * 10)->setMaxResults(10);
 
         $users = $query->getResult();
 
@@ -100,6 +91,8 @@ class UserController extends Controller
             }
             return $this->json(Array("code" => "500", "messages" => $messages));
         }
+
+        $user->setPassword(password_hash($user->getPassword(), PASSWORD_DEFAULT));
 
         $em = $this->getDoctrine()->getManager();
         $em->persist($user);
@@ -182,26 +175,28 @@ class UserController extends Controller
      */
     public function loginAction(Request $request)
     {
-        $username = $request->get("username");
-        $password = $request->get("password");
+      $data = json_decode(file_get_contents('php://input'), true);
+      $username = $data['username'];
+      $password = $data['password'];
 
-        $user = $this->getDoctrine()
-            ->getRepository(User::class)
-            ->findOneBy(array("username" => $username));
-        if ($user) {
-            // Validate password.
-            if ($user->getPassword() == $password) {
-                // Login ok.
-                $request->getSession()->set("user", $user);
-                return $this->redirect("user/all");
-            } else {
-                // Password wrong.
-                return $this->render("user/error.html.twig", array("messages" => "密码错误"));
-            }
+      $user = $this->getDoctrine()
+        ->getRepository(User::class)
+        ->findOneBy(array("username" => $username));
+
+      if ($user) {
+        // Validate password.
+        if (password_verify($password, $user->getPassword())) {
+          // Login ok.
+          $request->getSession()->set("user", $user);
+          return $this->json($user->getJson());
         } else {
-            // Username not found.
-            return $this->render("user/error.html.twig", array("messages" => "用户名未找到"));
+          // Password wrong.
+          return (new Response('Password wrong', Response::HTTP_BAD_REQUEST))->send();
         }
+      } else {
+        // Username not found.
+        return (new Response('User not found', Response::HTTP_NOT_FOUND))->send();
+      }
     }
 
     /**

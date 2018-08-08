@@ -78,12 +78,15 @@ hr {
   margin: 20px auto;
 }
 
-.td.actions {
-  width: 10em;
-  text-align: center;
+.td-action {
+  width: 9.3em;
 }
 
 .actions {
   width: 90%;
   margin: 20px auto;
+}
+
+.message-box {
+  display: none;
 }

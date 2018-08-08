@@ -300,7 +300,7 @@
                     email: email.value,
                     sex: ge('man').checked ? 0 : 1,
                     birthday: ge('brithday').value,
-                    avatar: ge('avatar').value.split('\\').pop(),
+                    avatar: ge('avatar').value.split('\\').pop() === '' ? $('#avatarDiv').css('background-image').split('"')[1].split('/').pop() : ge('avatar').value.split('\\').pop(),
                     description: ge('description').value
                 },
                 headers: {'Content-Type': 'multipart/form-data'}

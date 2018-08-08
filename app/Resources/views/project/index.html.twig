@@ -3,8 +3,20 @@
 {% block content %}
     <div class="actions">
         <button class="btn btn-primary" id="addProject">添加项目</button>
+        
     </div>
 
+     <div class="actions">
+        <select id="selectCategory" class="form-control">
+          <option value="1">新建</option>
+          <option value="2">进行中</option>
+          <option value="3">暂停</option>
+          <option value="4">已完成</option>
+        </select>
+
+    </div>
+
+    
     <table class="table table-hover table-bordered my-table">
         <thead>
         <tr>
@@ -27,8 +39,10 @@
                 <td>{{ d[0].startDate|date('Y-m-d') }}</td>
                 <td>{{ d[0].endDate ? d[0].endDate |date('Y-m-d') : '' }}</td>
                 <td>{{ d.username }}</td>
-                <td>
+                <td class="td-action">
+                    {% if d[0].status != 4 %}
                     <button class="btn btn-default" id="updateProject" onclick="updateProject({{ loop.index }}, {{ d[0].id }})">修改</button>
+                    {% endif %}
                     <button class="btn btn-danger" id="deleteProject" onclick="deleteProject({{ d[0].id }});">删除
                     </button>
                 </td>
@@ -37,7 +51,7 @@
         </tbody>
     </table>
 
-    <!-- Modal -->
+    <!-- Create new project modal -->
     <div class="modal fade" id="addProjectModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -49,8 +63,10 @@
                 <div class="modal-body">
                     <div class="form-group">
                         <label for="name">项目名：</label>
-                        <input type="text" class="form-control" id="name">
+                        <input type="text" class="form-control" id="addNewProjectFormName">
                     </div>
+
+                    <div class="alert alert-danger message-box" id="addNewProjectMessageBox"></div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-success" id="addSubmit">添加</button>
@@ -83,6 +99,8 @@
                             <option value="4">已完成</option>
                         </select>
                     </div>
+
+                    <div class="alert alert-danger message-box" id="updateProjectMessageBox"></div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-success" id="updateProjectSubmit">修改</button>
@@ -122,7 +140,7 @@
                 id: '{{ d[0].id }}',
                 name: '{{ d[0].name }}',
                 status: '{{ d[0].status }}'
-            }
+            },
         {% endfor %}
         ];
 
@@ -131,9 +149,39 @@
         });
 
         $('#addSubmit').click(() => {
-            axios.post('/project', {
-                name: $('#name').val()
-            }).then(res => window.location.reload());
+          const name = $('#addNewProjectFormName').val();
+          const box = $('#addNewProjectMessageBox');
+
+          let message = '';
+
+          if (name.trim() === '') {
+            // Show wrong.
+            // name cannot empty.
+            message = '项目名不能为空';
+            box.text(message);
+            box.css('display', 'block');
+            return;
+          }
+
+          $('#addSubmit').prop('disabled', true);
+
+          axios.post('/project', {
+              name: $('#addNewProjectFormName').val()
+          })
+          .then(res => window.location.reload())
+          .catch(err => {
+            let status = err.response.status;
+
+            if (status === 400) {
+              message = '项目名已存在';
+            }
+
+            box.text(message);
+            box.css('display', 'block');
+          })
+          .finally(_ => {
+            $('#addSubmit').prop('disabled', false);
+          });
         });
 
         let willDeleteId;
@@ -157,13 +205,41 @@
         };
 
         $('#updateProjectSubmit').click(() => {
-            const data = {
-                name: $('#projectName').val(),
-                status: $('#updateProjectStatus').val()
-            };
+          let message = '';
+          const $box = $('#updateProjectMessageBox');
+          
+          if ($('#projectName').val().trim() === '') {
+            message = '项目名不能为空';
+            $box.text(message);
+            $box.css('display', 'block');
+            return;
+          }
 
-            axios.put('/project/' + willUpdateId, data)
-                .then(res => window.location.reload());
+          // Disabled button.
+          $('#updateProjectSubmit').prop('disabled', true);
+
+          const data = {
+              name: $('#projectName').val(),
+              status: $('#updateProjectStatus').val()
+          };
+
+          axios.put('/project/' + willUpdateId, data)
+            .then(_ => window.location.reload())
+            .catch(err => {
+              message = '';
+              const status = err.response.status;
+
+              if (status === 400) {
+                message = '项目名已存在';
+              }
+
+              $box.text(message);
+              $box.css('display', 'block');
+            })
+            .finally(_ => {
+              // Change button status.
+              $('#updateProjectSubmit').prop('disabled', false);
+            });
         });
 
         function getPlainText(str) {
@@ -171,5 +247,13 @@
             const dom = parser.parseFromString(str, 'text/html');
             return dom.body.textContent;
         }
+
+        $('#selectCategory').change(_ => {
+          const category = $('#selectCategory').val();
+          const link = '/project?category=' + category;
+          window.location.href = link;
+        });
+
+        $('#selectCategory').val(window.location.href.split('?')[1].split('=')[1])
     </script>
 {% endblock %}
