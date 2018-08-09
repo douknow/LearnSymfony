@@ -72,6 +72,8 @@
             <textarea name="description" id="description" cols="30" rows="5" class="form-control"></textarea>
         </div>
 
+        <div class="message-box alert alert-danger" id="messageBox"></div>
+
         <button class="btn btn-success" id="submitButton" disabled>添加</button>
         <a class="btn btn-default">取消</a>
     </form>
@@ -279,6 +281,7 @@
     }
 
     ge('submitButton').addEventListener('click', e => {
+      $('#submitButton').prop('disabled', true);
         e.preventDefault();
         let formData = new FormData();
         formData.set('username', username.value);
@@ -291,6 +294,7 @@
         formData.set('description', ge('description').value);
 
         if (data.type === 'edit') {
+          let fromPage = window.location.href.split('fromPage=')[1];
             // Update.
             axios.patch('/user/' + editUser.id, formData, {
                 data: {
@@ -305,14 +309,22 @@
                 },
                 headers: {'Content-Type': 'multipart/form-data'}
             }).then(() => {
-                self.location = '/user/all';
+                self.location = '/user/all?page=' + fromPage;
+            }).catch(err => {
+              $('#messageBox').text('用户名已存在');
+              $('#messageBox').css('display', 'block');
+              $('#submitButton').prop('disabled', false);
             });
         } else {
             // Add.
             axios.post('/user', formData, {
-                headers: {'Content-Type': 'multipart/form-data'}
+              headers: {'Content-Type': 'multipart/form-data'}
             }).then(() => {
-                self.location = '/user/all';
+              self.location = '/user/all?page=9999999999';
+            }).catch(err => {
+              $('#messageBox').text('用户名已存在');
+              $('#messageBox').css('display', 'block');
+              $('#submitButton').prop('disabled', false);
             });
         }
     }, false);

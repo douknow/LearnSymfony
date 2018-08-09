@@ -1,13 +1,37 @@
 {% extends 'base.html.twig' %}
 
+{% block styles %}
+  <style>
+    .search {
+      display: flex;
+    }
+
+    .search div:first-child {
+      flex-grow: 1;
+      margin-right: 10px;
+    }
+  </style>
+{% endblock %}
+
 {% block content %}
     <div class="actions">
         <button class="btn btn-primary" id="addProject">添加项目</button>
-        
+        <a href="/project" class="btn btn-default" id="addProject">重置</a>
+    </div>
+
+    <div class="actions search">
+      <div>
+        <input id="search" class="form-control">
+      </div>
+
+      <div>
+        <button class="btn btn-success" id="searchButton">搜索</button>
+      </div>
     </div>
 
      <div class="actions">
         <select id="selectCategory" class="form-control">
+          <option value="0">全部</option>
           <option value="1">新建</option>
           <option value="2">进行中</option>
           <option value="3">暂停</option>
@@ -36,8 +60,8 @@
                 <td>{{ loop.index }}</td>
                 <td>{{ d[0].name }}</td>
                 <td>{% if d[0].status == 1 %}新建{% elseif d[0].status == 2 %}进行中{% elseif d[0].status == 3 %}暂停{% elseif d[0].status == 4 %}已完成{% endif %}</td>
-                <td>{{ d[0].startDate|date('Y-m-d') }}</td>
-                <td>{{ d[0].endDate ? d[0].endDate |date('Y-m-d') : '' }}</td>
+                <td>{{ d[0].startDate|date('Y-m-d h:i:s') }}</td>
+                <td>{{ d[0].endDate ? d[0].endDate |date('Y-m-d h:i:s') : '' }}</td>
                 <td>{{ d.username }}</td>
                 <td class="td-action">
                     {% if d[0].status != 4 %}
@@ -249,11 +273,41 @@
         }
 
         $('#selectCategory').change(_ => {
-          const category = $('#selectCategory').val();
-          const link = '/project?category=' + category;
-          window.location.href = link;
+          getLink();
         });
 
-        if (window.location.href.split('?').length > 1) $('#selectCategory').val(window.location.href.split('?')[1].split('=')[1])
+        let hrefData = window.location.href.split('?')
+        if (hrefData = window.location.href.split('?')[1]){
+          hrefData = hrefData[1].split('&').reduce((a, v) => {
+            let d = v.split('=');
+            a[d[0]]=d[1];
+            return a;
+          }, {});
+        } else { hrefData = {} };
+
+        $('#search').val(hrefData['search'] ? hrefData['search'] : '');
+        $('#selectCategory').val(hrefData['category'] ? hrefData['category'] : 0);
+
+        $('#searchButton').click(_ => {
+          getLink();
+        });
+
+        function getLink() {
+          const keyword = $('#search').val();
+          const category = $('#selectCategory').val();
+          let href = '/project?';
+
+          if (parseInt(category)) {
+            href += `category=${category}`;
+          }
+
+          if (keyword.trim() != '') {
+            href += `&search=${keyword}`;
+          }
+
+          console.log(href);
+
+          window.location.href = href;
+        }
     </script>
 {% endblock %}

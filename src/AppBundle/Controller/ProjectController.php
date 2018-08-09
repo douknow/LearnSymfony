@@ -11,6 +11,8 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
+date_default_timezone_set('PRC');
+
 class ProjectController extends Controller
 {
     /**
@@ -36,7 +38,17 @@ class ProjectController extends Controller
         }
 
         $queryString = '';
-        if (key_exists('category', $_GET)) {
+        if (key_exists('category', $_GET) && key_exists('search', $_GET)) {
+          $queryString = "select p, u.username from AppBundle:Project p join AppBundle:User u where p.managerUser = :id and p.managerUser = u.id and p.status = :category and p.name like :search order by p.status asc";
+
+          $query = $em
+            ->createQuery(
+                $queryString
+            )
+            ->setParameters(array('id'=>$u->getId(), 'category'=>$_GET['category'], 'search'=>'%'.$_GET['search'].'%'))
+            ->setFirstResult(($page - 1) * 10)
+            ->setMaxResults(10);
+        } else if (key_exists('category', $_GET)) {
           $queryString = 'select p, u.username from AppBundle:Project p join AppBundle:User u where p.managerUser = :id and p.managerUser = u.id and p.status = :category order by p.status asc';
 
           $query = $em
@@ -44,6 +56,16 @@ class ProjectController extends Controller
                 $queryString
             )
             ->setParameters(array('id'=>$u->getId(), 'category'=>$_GET['category']))
+            ->setFirstResult(($page - 1) * 10)
+            ->setMaxResults(10);
+        } else if (key_exists('search', $_GET)) {
+          $queryString = "select p, u.username from AppBundle:Project p join AppBundle:User u where p.managerUser = :id and p.managerUser = u.id and p.name like :search order by p.status asc";
+
+          $query = $em
+            ->createQuery(
+                $queryString
+            )
+            ->setParameters(array('id'=>$u->getId(), 'search'=>'%'.$_GET['search'].'%'))
             ->setFirstResult(($page - 1) * 10)
             ->setMaxResults(10);
         } else {

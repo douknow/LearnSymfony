@@ -42,7 +42,7 @@ class UserController extends Controller
         $allPage = intval((intval($allPage) % 10) == 0 ? intval($allPage) / 10 : (intval($allPage) / 10) + 1);
 
         if ($page > $allPage) {
-            $page == $allPage;
+            $page = $allPage;
         }
 
         $query = $em->createQuery(
@@ -80,6 +80,14 @@ class UserController extends Controller
         $avatar = $request->get("avatar");
         $description = $request->get("description");
 
+        $fu = $this->getDoctrine()
+          ->getRepository(User::class)
+          ->findOneBy(array("username"=>$username));
+
+        if ($fu) {
+          return (new Response('Already exists', Response::HTTP_BAD_REQUEST))->send();
+        }
+
         $user = new User($username, $password, $phoneNumber, $email, $sex, new \DateTime($birthday), $avatar, $description);
 
         $errors = $validator->validate($user);
@@ -114,6 +122,14 @@ class UserController extends Controller
         $birthday = $data['birthday'];
         $avatar = $data['avatar'];
         $description = $data['description'];
+
+        $fu = $user = $this->getDoctrine()
+          ->getRepository(User::class)
+          ->findOneBy(array("username" => $username));
+
+        if ($fu && $fu.id != $id) {
+          return (new Response('Username already exists', Response::HTTP_BAD_REQUEST))->send();
+        }
 
         $user = $this->getDoctrine()
             ->getRepository(User::class)
